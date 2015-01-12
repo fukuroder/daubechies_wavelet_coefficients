@@ -1,2 +1,2 @@
 # daubechies_wavelet_coefficients
-Daubechies wavelet coefficients(db2 - db100)
+Daubechies wavelet coefficients(db2 - db50)
