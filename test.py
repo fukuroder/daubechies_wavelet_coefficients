@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-import scipy.signal, numpy, numpy.linalg as nl, sympy, sympy.mpmath as sm, matplotlib.pyplot as plt
+import sympy
+import sympy.mpmath as sm
+import scipy.signal
+import matplotlib.pyplot as plt
 
 # precition
 sm.mp.prec = 256
 
 def daubechis(N):
-	q_z = []
-	for k in range(N-1,-1,-1):
-		q_z.append( sm.binomial(N-1+k,k) )
+	q_z = [sm.binomial(N-1+k,k) for k in reversed(range(N))]
 
-	q_sol,err = sm.mp.polyroots(q_z, maxsteps=100, cleanup=True, extraprec=10, error=True)
-	#print N, err
-	
+	q_sol,err = sm.mp.polyroots(q_z, maxsteps=100, error=True)
+	#print N, sm.nstr(err,5)
+
 	if err > 1.0e-60:
 		raise Exception
 
@@ -23,22 +24,17 @@ def daubechis(N):
 		else:
 			s_arr.append(sol[1])
 
-	z = sympy.symbols('z')
 	h0z = 1
 	for s in s_arr:
-		h0z *= (z-s)/(sm.mpf('1')-s)
+		h0z *= sympy.sympify('(z-s)/(1-s)').subs('s',s)
 
-	hz = sympy.expand((sm.mpf('1/2')*z + sm.mpf('1/2'))**N*h0z)
+	hz = (sympy.sympify('(1+z)/2')**N*h0z).expand()
 
-	scaling_coeff = []
-	for k in range(N*2-1, -1, -1):
-		scaling_coeff.append(sympy.re(hz.coeff(z,k)))
-		
+	scaling_coeff = [sympy.re(hz.coeff('z',k)) for k in reversed(range(N*2))]
+
 	#sm.nprint(sum(scaling_coeff)-1)
-
-	sqrt2 = sympy.sqrt(sm.mpf('2'))
-	return map(lambda s:s*sqrt2, scaling_coeff)
-	
+	sqrt2 = sm.sqrt('2.0')
+	return [s*sqrt2 for s in scaling_coeff]
 
 if __name__ == '__main__':
 	for N in range(2,100):
@@ -48,16 +44,16 @@ if __name__ == '__main__':
 		for i, c in enumerate(dbN):
 			f.write('h['+ str(i) + ']='+ sm.nstr(c,40) + '\n')
 		f.close()
-		
+
 		x, phi, psi = scipy.signal.cascade(dbN)
-		
+
 		plt.plot(x, phi, 'k')
 		plt.grid()
 		plt.title('db' + str(N) + ' scaling function')
 		#plt.savefig('db' + str(N).zfill(2) + '_scaling' + '.svg')
 		plt.savefig('db' + str(N).zfill(2) + '_scaling' + '.png')
 		plt.clf()
-		
+
 		plt.plot(x, psi, 'k')
 		plt.grid()
 		plt.title( 'db' + str(N) + " wavelet" )
