@@ -9,7 +9,11 @@ def daubechis(N):
 	for k in range(N-1,-1,-1):
 		q_z.append( sm.binomial(N-1+k,k) )
 
-	q_sol = sm.mp.polyroots(q_z)
+	q_sol,err = sm.mp.polyroots(q_z, maxsteps=100, cleanup=True, extraprec=10, error=True)
+	#print N, err
+	
+	if err > 1.0e-60:
+		raise Exception
 
 	s_arr = []
 	for q in q_sol:
@@ -37,7 +41,7 @@ def daubechis(N):
 	
 
 if __name__ == '__main__':
-	for N in range(2,51):
+	for N in range(2,100):
 		f = open('db' + str(N).zfill(2) +'_coefficients.txt', 'w')
 		dbN = daubechis(N)
 		f.write('# db' + str(N) + ' scaling coefficients\n')
