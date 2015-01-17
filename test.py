@@ -38,12 +38,12 @@ def main():
 	for N in range(2,100):
 		# get dbN coeffients
 		dbN = daubechis(N)
-		
+
 		# write coeffients
 		f = open('db' + str(N).zfill(2) +'_coefficients.txt', 'w')
 		f.write('# db' + str(N) + ' scaling coefficients\n')
-		for i, c in enumerate(dbN):
-			f.write('h['+ str(i) + ']='+ sm.nstr(c,40) + '\n')
+		for i, h in enumerate(dbN):
+			f.write('h['+ str(i) + ']='+ sm.nstr(h,40) + '\n')
 		f.close()
 
 		# get an approximation of scaling function
