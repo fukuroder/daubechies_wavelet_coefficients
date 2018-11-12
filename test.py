@@ -9,15 +9,18 @@ import matplotlib.pyplot as plt
 sm.mp.prec = 512
 
 def daubechies(N):
-    # make polynomial
-    q_y = [sm.binomial(N-1+k,k) for k in reversed(range(N))]
+    # p vanishing moments.
+    p = int(N/2)
+    # make polynomial; see Mallat, 7.96
+    Py = [sm.binomial(p-1+k, k) for k in reversed(range(p))]
 
     # get polynomial roots y[k]
-    y = sm.mp.polyroots(q_y, maxsteps=200, extraprec=64)
+    Py_roots = sm.mp.polyroots(Py, maxsteps=200, extraprec=64)
 
     z = []
-    for yk in y:
-        # subustitute y = -1/4z + 1/2 - 1/4/z to factor f(y) = y - y[k]
+    for yk in Py_roots:
+        # substitute y = -1/4z + 1/2 - 1/4/z to factor f(y) = y - y[k]
+        # We've found the roots of P(y). We need the roots of Q(z) = P((1-z-1/z)/4)
         f = [sm.mpf('-1/4'), sm.mpf('1/2') - yk, sm.mpf('-1/4')]
 
         # get polynomial roots z[k]
@@ -27,25 +30,26 @@ def daubechies(N):
     h0z = sm.sqrt('2')
     for zk in z:
         if sm.fabs(zk) < 1:
+            # This calculation is superior to Mallat, (equation between 7.96 and 7.97)
             h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk',zk)
 
     # adapt vanishing moments
-    hz = (sympy.sympify('(1+z)/2')**N*h0z).expand()
+    hz = (sympy.sympify('(1+z)/2')**p*h0z).expand()
 
     # get scaling coefficients
-    return [sympy.re(hz.coeff('z',k)) for k in reversed(range(N*2))]
+    return [sympy.re(hz.coeff('z',k)) for k in reversed(range(p*2))]
 
 def main():
-    for N in range(2,30):
+    for p in range(1,30):
         # get dbN coeffients
-        dbN = daubechies(N)
+        dbN = daubechies(2*p)
 
         # write coeffients
-        filename = os.path.join(os.getcwd(), 'coefficients/daub' + str(2*N).zfill(2) +'_coefficients.txt')
+        filename = os.path.join(os.getcwd(), 'coefficients/daub' + str(2*p).zfill(2) +'_coefficients.txt')
         print("Writing file {}".format(filename))
         with open(filename, 'w+') as f:
-            f.write('# Daubechies ' + str(2*N) + ' scaling coefficients\n')
-            f.write("        else if constexpr (N == " + str(2*N) + ")\n        {\n")
+            f.write('# Daubechies ' + str(2*p) + ' scaling coefficients\n')
+            f.write("        else if constexpr (N == " + str(2*p) + ")\n        {\n")
             f.write("            if constexpr (std::is_same<float, Real>::value) {\n                return {")
             for i, h in enumerate(dbN):
                 f.write(sm.nstr(h, 9) + 'f, ')
