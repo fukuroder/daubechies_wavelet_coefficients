@@ -1,67 +1,76 @@
-# -*- coding: utf-8 -*-
 import sympy
-import sympy.mpmath as sm
+import mpmath
 import scipy.signal
 import matplotlib.pyplot as plt
+import os
+import tqdm
 
 # precition
-sm.mp.prec = 256
+mpmath.mp.prec = 256
 
 def daubechis(N):
-	# make polynomial
-	q_y = [sm.binomial(N-1+k,k) for k in reversed(range(N))]
+    # make polynomial
+    q_y = [mpmath.binomial(N-1+k,k) for k in reversed(range(N))]
 
-	# get polynomial roots y[k]
-	y = sm.mp.polyroots(q_y, maxsteps=200, extraprec=64)
+    # get polynomial roots y[k]
+    y = mpmath.mp.polyroots(q_y, maxsteps=200, extraprec=64)
 
-	z = []
-	for yk in y:
-		# subustitute y = -1/4z + 1/2 - 1/4/z to factor f(y) = y - y[k]
-		f = [sm.mpf('-1/4'), sm.mpf('1/2') - yk, sm.mpf('-1/4')]
+    z = []
+    for yk in y:
+        # subustitute y = -1/4z + 1/2 - 1/4/z to factor f(y) = y - y[k]
+        f = [mpmath.mpf('-1/4'), mpmath.mpf('1/2') - yk, mpmath.mpf('-1/4')]
 
-		# get polynomial roots z[k]
-		z += sm.mp.polyroots(f)
+        # get polynomial roots z[k]
+        z += mpmath.mp.polyroots(f)
 
-	# make polynomial using the roots within unit circle
-	h0z = sm.sqrt('2')
-	for zk in z:
-		if sm.fabs(zk) < 1:
-			h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk',zk)
+    # make polynomial using the roots within unit circle
+    h0z = mpmath.sqrt('2')
+    for zk in z:
+        if mpmath.fabs(zk) < 1:
+            h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk',zk)
 
-	# adapt vanising moments
-	hz = (sympy.sympify('(1+z)/2')**N*h0z).expand()
+    # adapt vanising moments
+    hz = (sympy.sympify('(1+z)/2')**N*h0z).expand()
 
-	# get scaling coefficients
-	return [sympy.re(hz.coeff('z',k)) for k in reversed(range(N*2))]
+    # get scaling coefficients
+    return [sympy.re(hz.coeff('z',k)) for k in reversed(range(N*2))]
 
 def main():
-	for N in range(2,100):
-		# get dbN coeffients
-		dbN = daubechis(N)
+    coefficients_dir = 'coefficients'
+    scaling_png_dir = 'scaling_png'
+    wavelet_png_dir = 'wavelet_png'
+    os.makedirs(coefficients_dir, exist_ok=True)
+    os.makedirs(scaling_png_dir, exist_ok=True)
+    os.makedirs(wavelet_png_dir, exist_ok=True)
 
-		# write coeffients
-		f = open('db' + str(N).zfill(2) +'_coefficients.txt', 'w')
-		f.write('# db' + str(N) + ' scaling coefficients\n')
-		for i, h in enumerate(dbN):
-			f.write('h['+ str(i) + ']='+ sm.nstr(h,40) + '\n')
-		f.close()
+    for N in tqdm.tqdm(range(2,100)):
+        # get dbN coeffients
+        dbN = daubechis(N)
 
-		# get an approximation of scaling function
-		x, phi, psi = scipy.signal.cascade(dbN)
+        # write coeffients
+        lines = []
+        lines.append(f'# db{N} scaling coefficients\n')
+        for i, h in enumerate(dbN):
+            lines.append(f'h[{i}]={mpmath.nstr(h,40, min_fixed=0)}\n')
+        with open(os.path.join(coefficients_dir, f'db{N:02d}_coefficients.txt'), 'w', newline='\n') as f:
+            f.writelines(lines)
 
-		# plot scaling function
-		plt.plot(x, phi, 'k')
-		plt.grid()
-		plt.title('db' + str(N) + ' scaling function')
-		plt.savefig('db' + str(N).zfill(2) + '_scaling' + '.png')
-		plt.clf()
+        # get an approximation of scaling function
+        x, phi, psi = scipy.signal.cascade(dbN)
 
-		# plot wavelet
-		plt.plot(x, psi, 'k')
-		plt.grid()
-		plt.title( 'db' + str(N) + " wavelet" )
-		plt.savefig('db' + str(N).zfill(2) + '_wavelet' + '.png')
-		plt.clf()
+        # plot scaling function
+        plt.plot(x, phi)
+        plt.grid()
+        plt.title(f'db{N} scaling function')
+        plt.savefig(os.path.join(scaling_png_dir, f'db{N:02d}_scaling.png'))
+        plt.clf()
+
+        # plot wavelet
+        plt.plot(x, psi)
+        plt.grid()
+        plt.title(f'db{N} wavelet')
+        plt.savefig(os.path.join(wavelet_png_dir, f'db{N:02d}_wavelet.png'))
+        plt.clf()
 
 if __name__ == '__main__':
-	main()
+    main()
