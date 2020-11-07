@@ -6,11 +6,11 @@ import os
 import tqdm
 
 # precition
-mpmath.mp.prec = 256
+mpmath.mp.prec = 1024
 
 def daubechies(N):
     # make polynomial
-    q_y = [mpmath.binomial(N-1+k,k) for k in reversed(range(N))]
+    q_y = [mpmath.binomial(N-1+k, k) for k in reversed(range(N))]
 
     # get polynomial roots y[k]
     y = mpmath.mp.polyroots(q_y, maxsteps=200, extraprec=64)
@@ -26,13 +26,13 @@ def daubechies(N):
     # make polynomial using the roots
     h0z = mpmath.sqrt('2')
     for zk in z:
-        h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk',zk)
+        h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk', zk)
 
-    # adapt vanising moments
+    # adapt vanishing moments
     hz = (sympy.sympify('(1+z)/2')**N*h0z).expand()
 
     # get scaling coefficients
-    return [sympy.re(hz.coeff('z',k)) for k in reversed(range(N*2))]
+    return [sympy.re(hz.coeff('z', k)) for k in reversed(range(N*2))]
 
 def main():
     coefficients_dir = 'coefficients'
@@ -42,7 +42,7 @@ def main():
     os.makedirs(scaling_png_dir, exist_ok=True)
     os.makedirs(wavelet_png_dir, exist_ok=True)
 
-    for N in tqdm.tqdm(range(2,100)):
+    for N in tqdm.tqdm(range(2, 100)):
         # get dbN coeffients
         dbN = daubechies(N)
 
@@ -50,7 +50,7 @@ def main():
         lines = []
         lines.append(f'# db{N} scaling coefficients\n')
         for i, h in enumerate(dbN):
-            lines.append(f'{mpmath.nstr(h,40, min_fixed=0)}\n')
+            lines.append(f'{mpmath.nstr(h, 40, min_fixed=0)}\n')
         with open(os.path.join(coefficients_dir, f'db{N:02d}_coefficients.txt'), 'w', newline='\n') as f:
             f.writelines(lines)
 
