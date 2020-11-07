@@ -50,7 +50,7 @@ def main():
         lines = []
         lines.append(f'# db{N} scaling coefficients\n')
         for i, h in enumerate(dbN):
-            lines.append(f'h[{i}]={mpmath.nstr(h,40, min_fixed=0)}\n')
+            lines.append(f'{mpmath.nstr(h,40, min_fixed=0)}\n')
         with open(os.path.join(coefficients_dir, f'db{N:02d}_coefficients.txt'), 'w', newline='\n') as f:
             f.writelines(lines)
 
