@@ -20,14 +20,13 @@ def daubechies(N):
         # subustitute y = -1/4z + 1/2 - 1/4/z to factor f(y) = y - y[k]
         f = [mpmath.mpf('-1/4'), mpmath.mpf('1/2') - yk, mpmath.mpf('-1/4')]
 
-        # get polynomial roots z[k]
-        z += mpmath.mp.polyroots(f)
+        # get polynomial roots z[k] within unit circle
+        z += [ zk for zk in mpmath.mp.polyroots(f) if mpmath.fabs(zk) < 1 ]
 
-    # make polynomial using the roots within unit circle
+    # make polynomial using the roots
     h0z = mpmath.sqrt('2')
     for zk in z:
-        if mpmath.fabs(zk) < 1:
-            h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk',zk)
+        h0z *= sympy.sympify('(z-zk)/(1-zk)').subs('zk',zk)
 
     # adapt vanising moments
     hz = (sympy.sympify('(1+z)/2')**N*h0z).expand()
