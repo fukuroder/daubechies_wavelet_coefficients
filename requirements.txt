@@ -1,4 +1,5 @@
-sympy
-scipy
-matplotlib
-tqdm
+sympy==1.6.2
+mpmath==1.1.0
+scipy==1.5.4
+matplotlib==3.3.2
+tqdm==4.51.0
