@@ -8,7 +8,7 @@ import tqdm
 # precition
 mpmath.mp.prec = 256
 
-def daubechis(N):
+def daubechies(N):
     # make polynomial
     q_y = [mpmath.binomial(N-1+k,k) for k in reversed(range(N))]
 
@@ -45,7 +45,7 @@ def main():
 
     for N in tqdm.tqdm(range(2,100)):
         # get dbN coeffients
-        dbN = daubechis(N)
+        dbN = daubechies(N)
 
         # write coeffients
         lines = []
