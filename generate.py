@@ -6,7 +6,7 @@ import os
 import tqdm
 
 # precition
-mpmath.mp.prec = 1024
+mpmath.mp.prec = 256
 
 def daubechies(N):
     # make polynomial
