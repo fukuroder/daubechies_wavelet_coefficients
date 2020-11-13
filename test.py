@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 import os
-from generate import daubechies
 
 class TestDaubechies(unittest.TestCase):
     def test_all(self):
